@@ -11,6 +11,7 @@ import {
 } from './sources.js';
 import { fungalEdibility, getUsage } from './usage.js';
 
+const nameOf = f => f.common && f.common.toLowerCase() !== f.name.toLowerCase() ? `${esc(f.common)} <em class="muted">(${esc(f.name)})</em>` : `<em>${esc(f.name)}</em>`;
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const PLANT_GROUPS = ['flowering', 'ferns', 'conifers', 'otherplants'];
 const TYPE_INFO = {
@@ -192,8 +193,8 @@ function draw(state) {
       return `<details class="mgmt-act myco-plant" ${exact.length ? 'open' : ''}>
         <summary><span class="act-name"><em>${esc(p.genus)}</em> <span class="muted small">${esc(p.localSpecies.slice(0, 3).map(s => s.common || s.name).join(', '))}${p.localSpecies.length > 3 ? ` +${p.localSpecies.length - 3}` : ''}</span></span>
           ${Object.entries(p.types).map(([t, n]) => `<span class="tag ${TYPE_INFO[t].cls}">${TYPE_INFO[t].short} · ${n} record${n === 1 ? '' : 's'}</span>`).join(' ')}</summary>
-        ${exact.length ? `<p><strong>Partner species recorded nearby:</strong> ${exact.map(n => `${esc(n.f.common || n.f.name)} <em class="muted">(${esc(n.f.name)})</em> ${originBadge(n.f)}`).join(' · ')}</p>` : ''}
-        ${genusOnly.length ? `<p class="small"><strong>Nearby fungi in partner genera:</strong> ${genusOnly.slice(0, 12).map(n => `${esc(n.f.common || n.f.name)} <em class="muted">(${esc(n.f.name)})</em>`).join(' · ')}${genusOnly.length > 12 ? ` +${genusOnly.length - 12} more` : ''}</p>` : ''}
+        ${exact.length ? `<p><strong>Partner species recorded nearby:</strong> ${exact.map(n => `${nameOf(n.f)} ${originBadge(n.f)}`).join(' · ')}</p>` : ''}
+        ${genusOnly.length ? `<p class="small"><strong>Nearby fungi in partner genera:</strong> ${genusOnly.slice(0, 12).map(n => nameOf(n.f)).join(' · ')}${genusOnly.length > 12 ? ` +${genusOnly.length - 12} more` : ''}</p>` : ''}
         <p class="small muted">${p.partnerCount} partner taxa recorded worldwide, in genera: ${esc(p.partnerGenera.slice(0, 30).join(', '))}${p.partnerGenera.length > 30 ? '…' : ''}</p>
       </details>`;
     }).join('')}</div>` : '<p class="hint">No GloBI mycorrhizal records for plant genera found here.</p>'}
@@ -239,7 +240,7 @@ function draw(state) {
       box.dataset.loaded = '1';
       if (u.missing) { box.innerHTML = '<p class="hint">No Wikipedia article, so no documented uses.</p>'; return; }
       const list = items => `<ul class="usage-list">${items.slice(0, 4).map(i => `<li><blockquote>${esc(i.text)}</blockquote><a class="small" href="${esc(u.url)}#${encodeURIComponent(i.anchor.replace(/ /g, '_'))}" target="_blank" rel="noopener">Wikipedia – ${esc(u.title)} › ${esc(i.section)}</a></li>`).join('')}</ul>`;
-      box.innerHTML = `<h4>Traditional (First Nations) usage</h4>${u.traditional.length ? list(u.traditional) : '<p class="hint">None documented in the Wikipedia article.</p>'}
+      box.innerHTML = `<h4>Traditional (Indigenous) usage</h4>${u.traditional.length ? list(u.traditional) : '<p class="hint">None documented in the Wikipedia article.</p>'}
         <h4>Other documented usage</h4>${u.western.length ? list(u.western) : '<p class="hint">None documented in the Wikipedia article.</p>'}`;
     } catch (err) {
       box.innerHTML = `<p class="hint error">Couldn't load uses (${esc(err.message)}).</p>`;

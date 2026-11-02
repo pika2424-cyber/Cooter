@@ -490,7 +490,7 @@ async function loadUsage(s) {
       return;
     }
     box.innerHTML = `
-      <h3>Traditional (First Nations) usage</h3>
+      <h3>Traditional (Indigenous) usage</h3>
       ${u.traditional.length ? usageList(u.traditional, u.title, u.url)
         : '<p class="hint">No traditional usage is documented in this species\' Wikipedia article. Knowledge may still exist and be held by Traditional Owners.</p>'}
       <h3>Other documented usage (Western &amp; international)</h3>
