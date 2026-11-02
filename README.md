@@ -32,7 +32,7 @@ It's a static site, so there's no build step, no server and no API keys.
 
 1. On GitHub open **pika2424-cyber/Cooter → Settings → Pages**.
 2. Under *Build and deployment* choose **Source: Deploy from a branch**.
-3. Pick the branch **`claude/native-species-location-app-n6suga`** (or `main` once merged) and folder **`/ (root)`**, then **Save**.
+3. Pick the branch **`main`** and folder **`/ (root)`**, then **Save**.
 4. After a minute or two the app is live at **https://pika2424-cyber.github.io/Cooter/**.
 5. On your phone, open that link, allow location, then use **Add to Home Screen** (Safari: Share → Add to Home Screen; Chrome: ⋮ → Install app) to use it like a normal app.
 
