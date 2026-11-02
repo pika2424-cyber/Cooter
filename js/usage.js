@@ -75,8 +75,8 @@ const isIndigenous = t => INDIGENOUS_CS.test(t) || INDIGENOUS_CI.test(t);
 const WESTERN_USE = /\b(used (as|for|in|to|by|medicinally)|uses (include|of)|is (grown|planted|cultivated|harvested)|are (grown|planted|cultivated|harvested)|widely (grown|planted|cultivated)|cultivat\w+|grown (as|for|in)|planted (as|for|in)|timber|firewood|furniture|cabinet\w*|veneer|edible|eaten|culinary|flavou?r\w*|food|fodder|forage|honey|nectar source|essential oils?|oil|medicin\w*|remed\w*|treat(s|ed|ment)? (of|for)|tannin|dye|fibre|fiber|weav\w*|crafts?|paper|pulp|ornamental|landscap\w*|hedg\w*|windbreak|shelterbelt|erosion control|revegetation|bush ?tucker|bush ?food|brew\w*|tea|jam|sauce|spice|perfume|commercial\w*|sold|marketed|nursery|nurseries|garden\w*)\b/i;
 // Sentences about wildlife using the plant are ecology, not human usage.
 const WILDLIFE_USE = /\b(food (source|plant)s? for [^.]{0,40}(birds?|avian|insects?|larvae|caterpillars?|butterfl\w+|moths?|animals?|wildlife|species|mammals?|possums?|gliders?|bees)|host plant|eaten by [^.]{0,30}(birds?|insects?|larvae|caterpillars?|animals?|kangaroos?|wallabies|possums?|stock|cattle|sheep)|(birds?|insects?|larvae|caterpillars?|animals?|wildlife|bees|moths?|butterfl\w+) (feed|eat|use)s?)\b/i;
-const CONTINUES = /^(They|These|This|Its|It|Both|Also|In addition|Additionally|The (bark|seeds?|leaves|roots?|tubers?|fruits?|berries|wood|stems?|flowers?|gum|resin|sap|nectar|grains?|pods?|bulbs?|corms?|shoots?|plant))\b|\b(traditional|clap ?sticks|spear-?throwers?|woomeras?|shields?|coolamons?|dilly ?bags?|damper|bush ?tucker|bush ?food|ceremon\w*)\b/;
-const NON_TRADITIONAL = /\b(European|settlers?|colonists?|commercial\w*|cultivars?|nurser(y|ies)|horticultur\w*|exported|industry)\b/i;
+const CONTINUES = /^(They|These|This|Its|It|Both|Also|In addition|Additionally|The ([\w-]+,? ){0,3}(bark|seeds?|leaves|roots?|tubers?|fruits?|berries|wood|stems?|flowers?|gum|resin|sap|nectar|grains?|pods?|bulbs?|corms?|shoots?|plant))\b|\b(traditional|clap ?sticks|spear-?throwers?|woomeras?|shields?|coolamons?|dilly ?bags?|damper|bush ?tucker|bush ?food|ceremon\w*)\b/;
+const NON_TRADITIONAL = /\b(Europeans?|settlers?|colonists?|colonial|commercial\w*|cultivars?|cultivat\w*|nurser(y|ies)|horticultur\w*|gardens?|exported|industry|fodder|livestock|stock|cattle|sheep|ornamental|landscap\w*|today|modern|nowadays|restaurants?)\b/i;
 const SKIP_SUBHEADINGS = /\b(ecology|distribution|habitat|conservation|threats?|population|taxonomy|description|etymology|pests?|diseases?|appearance|properties)\b/i;
 const USE_WORDS = /\b(use[ds]?|using|utili[sz]ed|eat|eaten|ate|food|edible|medicin\w*|remed\w*|treat(ed|ment)?|fibre|fiber|string|cord|basket\w*|canoes?|shields?|spears?|tools?|implements?|roast\w*|cook\w*|bak\w*|dyes?|ceremon\w*|smok\w*|weav\w*|nets?|drinks?|beverages?|sweet\w*|nectar|resin|gum|tea|infusion|poultice|ground into|flour|damper|soaked|harvest\w*|gather\w*|collected)\b/i;
 const WESTERN_HEADINGS = /\b(uses?|usage|utili[sz]ation|cultivation|horticultur\w*|culinary|food|cuisine|economic|commercial|timber|wood|lumber|medicin\w*|pharmac\w*|garden\w*|landscap\w*|apicultur\w*|honey|essential oil|in culture|ornamental|agricultur\w*|forestry|industr\w*)\b/i;
@@ -135,7 +135,7 @@ function splitSentences(text) {
  * { missing: true } when there is no article for the species.
  */
 export async function getUsage(scientificName, signal) {
-  const key = 'usage4.' + scientificName.toLowerCase();
+  const key = 'usage5.' + scientificName.toLowerCase();
   const cached = cacheGet(key);
   if (cached) return cached;
 
@@ -163,10 +163,15 @@ export async function getUsage(scientificName, signal) {
     // A sentence that directly continues a traditional-use sentence ("The bark
     // is harvested to make string…") stays with it.
     const tradSet = new Set();
+    let inTradRun = false;
     sentences.forEach((s, i) => {
-      if (WILDLIFE_USE.test(s)) return;
-      if (isIndigenous(s) && USE_WORDS.test(s)) tradSet.add(i);
-      else if (tradSet.has(i - 1) && CONTINUES.test(s) && USE_WORDS.test(s) && !NON_TRADITIONAL.test(s)) tradSet.add(i);
+      if (WILDLIFE_USE.test(s)) { inTradRun = false; return; }
+      if (isIndigenous(s) && USE_WORDS.test(s)) { tradSet.add(i); inTradRun = true; return; }
+      if (NON_TRADITIONAL.test(s)) { inTradRun = false; return; }
+      // Following sentences in the same paragraph that keep describing uses
+      // ("The soft wood was used for shields…") stay traditional.
+      if (inTradRun && (CONTINUES.test(s) || USE_WORDS.test(s))) tradSet.add(i);
+      else inTradRun = false;
     });
     const trad = sentences.filter((_, i) => tradSet.has(i));
     if (trad.length) traditional.push({ text: trad.join(' '), section, anchor });
@@ -198,6 +203,21 @@ const EDIBLE_CATS = [
 const CAUTION_CATS = /^(Poisonous plants|Toxic plants|Plant toxins)$/i;
 const FOOD_SNIPPET = /\b(edible|bush ?food|bush ?tucker|eaten (raw|cooked|fresh|roasted)|used as (a )?food|food (plant|source) (for|by|of) (the )?(Aboriginal|Indigenous)|(Aboriginal|Indigenous)[^.]{0,60}\b(ate|eaten|eat|food|roasted)|(eaten|food)[^.]{0,40}\b(Aboriginal|Indigenous))/i;
 const NOT_EDIBLE = /\b(inedible|not edible|unpalatable)\b/i;
+const CITATION = /(Retrieved \d|Archived|Wayback|ISBN|doi:|\bpp?\. ?\d|\bpage \d|\(\d{4}\)|\b(19|20)\d\d\.\s|\bPress\b|Publishing|Journal|\bVol\.|Edition|\.com|\.au\b|\.org|[A-Z]\.[A-Z]\.;|Video:)/;
+/** The sentence of a snippet around the first food keyword, if it reads as prose (not a reference list). */
+function foodSentence(snip) {
+  const m = FOOD_SNIPPET.exec(snip);
+  if (!m) return null;
+  const start = Math.max(snip.lastIndexOf('. ', m.index) + 1, 0);
+  let end = snip.indexOf('. ', m.index + m[0].length);
+  end = end === -1 ? snip.length : end + 1;
+  const sentence = snip.slice(start, end).trim();
+  // Look a little before the sentence too: reference-list entries put the
+  // year/author/archive details just ahead of a title like "Edible …".
+  const context = snip.slice(Math.max(0, start - 45), end);
+  if (CITATION.test(context) || /\bstamp\b/i.test(sentence)) return null;
+  return sentence;
+}
 
 const STATE_CATEGORY = { VIC: 'Victoria (state)', NSW: 'New South Wales', ACT: 'the Australian Capital Territory', QLD: 'Queensland', SA: 'South Australia', TAS: 'Tasmania', WA: 'Western Australia', NT: 'the Northern Territory' };
 export const stateCategory = code => STATE_CATEGORY[code] || 'New South Wales';
@@ -281,14 +301,15 @@ export async function findEdibles(plants, stateCat, onProgress, signal) {
       if (m) { parts.add(m.part); evidence.push({ type: 'category', label: m.label, text: `Wikipedia category: ${c}` }); }
     }
     const snip = snippets.get(title);
-    if (snip && FOOD_SNIPPET.test(snip) && !NOT_EDIBLE.test(snip)) {
-      evidence.push({ type: 'text', label: 'Food use mentioned', text: snip });
+    const sentence = snip && !NOT_EDIBLE.test(snip) ? foodSentence(snip) : null;
+    if (sentence) {
+      evidence.push({ type: 'text', label: 'Food use mentioned', text: sentence });
       if (!parts.size) parts.add('Food use mentioned');
     }
     if (!evidence.length) continue;
     results.push({
       species: sp, title, url: wikiUrl(title), parts: [...parts], evidence,
-      caution: cats.some(c => CAUTION_CATS.test(c)) || /\b(poison\w*|toxic)\b/i.test(snip || ''),
+      caution: cats.some(c => CAUTION_CATS.test(c)) || /\b(poison\w*|toxic)\b/i.test(sentence || ''),
       strong: evidence.some(e => e.type === 'category'),
     });
   }
