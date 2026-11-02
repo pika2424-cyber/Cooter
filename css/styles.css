@@ -243,3 +243,8 @@ label.btn.file { cursor: pointer; }
 .linklike { background: none; border: 0; padding: 0; color: var(--brand); text-decoration: underline; cursor: pointer; font: inherit; }
 .myco-types ul { margin: .4rem 0; padding-left: 1.1rem; font-size: .9rem; }
 .myco-types li { margin: .3rem 0; }
+
+#fungiDialog { width: min(600px, 96vw); }
+#fungiDialog h3 { margin-top: 1rem; }
+.warning-inline { color: var(--en); margin: .3rem 0; }
+#fungiDialog .sp-main { align-items: flex-start; }

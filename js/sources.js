@@ -461,21 +461,3 @@ export async function globiPartnersOfPlants(genera, onProgress, signal) {
   }
   return out;
 }
-
-/** Recorded mycorrhizal hosts for fungus species: fungus key -> [{host,type,cite}] */
-export async function globiHostsOfFungi(names, onProgress, signal) {
-  const out = new Map();
-  for (let i = 0; i < names.length; i += 20) {
-    onProgress?.(`GloBI: checking fungi ${Math.min(i + 20, names.length)} of ${names.length}…`);
-    const batch = names.slice(i, i + 20);
-    const recs = await globi('sourceTaxon', batch, signal);
-    const wanted = new Set(batch.map(normaliseName));
-    for (const r of recs) {
-      const k = normaliseName(r.fungus);
-      if (!wanted.has(k)) continue; // sourceTaxon also matches child taxa
-      if (!out.has(k)) out.set(k, []);
-      out.get(k).push(r);
-    }
-  }
-  return out;
-}

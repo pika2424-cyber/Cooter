@@ -24,7 +24,6 @@
       <button role="tab" class="tab active" data-view="explore" aria-selected="true">Explore</button>
       <button role="tab" class="tab" data-view="checklist" aria-selected="false">Checklist <span id="checklistBadge" class="badge-count" hidden></span></button>
       <button role="tab" class="tab" data-view="edible" aria-selected="false">Edible plants</button>
-      <button role="tab" class="tab" data-view="myco" aria-selected="false">Mycorrhizal fungi</button>
       <button role="tab" class="tab" data-view="management" aria-selected="false">Management</button>
       <button role="tab" class="tab" data-view="about" aria-selected="false">About</button>
     </nav>
@@ -187,34 +186,6 @@
       </div>
     </section>
 
-    <!-- ================= MYCORRHIZAL FUNGI ================= -->
-    <section id="view-myco" class="view">
-      <div class="panel">
-        <div class="results-head">
-          <h2>Mycorrhizal fungi</h2>
-          <div class="row wrap">
-            <select id="mycoOrigin" aria-label="Origin">
-              <option value="all">Native &amp; introduced</option>
-              <option value="native">Native</option>
-              <option value="introduced">Introduced</option>
-              <option value="unknown">Origin not assessed</option>
-            </select>
-            <select id="mycoType" aria-label="Mycorrhizal type">
-              <option value="all">All types</option>
-              <option value="EcM">Ectomycorrhizal</option>
-              <option value="AM">Arbuscular</option>
-              <option value="ErM">Ericoid</option>
-              <option value="OrM">Orchid</option>
-            </select>
-          </div>
-        </div>
-        <p class="hint">Most native trees and shrubs depend on fungal partners on their roots. The fungi supply water and nutrients, and the plants supply sugars. This tab links the plants recorded around you with fungi recorded as their partners, and lists mycorrhizal fungi found nearby. It includes introduced species (shown as Introduced), because many arrived with pines and other planted trees.</p>
-        <div class="warning-box"><strong>⚠️ Never eat a wild mushroom based on this app.</strong> Edibility comes from Wikipedia and applies to correctly identified specimens only. Several deadly species grow in Australia and look like edible ones. Collecting fungi in parks and reserves is generally prohibited.</div>
-        <p id="mycoStatus" class="status" role="status" aria-live="polite"></p>
-        <div id="mycoBody"><p class="hint">Run a species search in <em>Explore</em> first.</p></div>
-      </div>
-    </section>
-
     <!-- ================= MANAGEMENT PRACTICE ================= -->
     <section id="view-management" class="view">
       <div class="panel">
@@ -259,15 +230,7 @@
         <h3>Edible plants</h3>
         <p>The Edible plants tab lists native plants in your search area that Wikipedia documents as food. This means either a food category (Bushfood, Edible fruits, Edible nuts and seeds, Leaf vegetables, Root vegetables…) or a sentence describing the plant as edible or eaten, which is shown as evidence. Plants without this evidence aren't listed. Always confirm identification before eating anything, and never harvest threatened species or from parks and reserves.</p>
         <h3>Mycorrhizal fungi</h3>
-        <p>The Mycorrhizal fungi tab combines these sources:</p>
-        <ul>
-          <li><strong>Fungi recorded nearby</strong>, including introduced ones, from iNaturalist and ALA.</li>
-          <li><strong>Mycorrhizal type</strong> (ecto-, arbuscular, ericoid, orchid) from the FUNGuild database. Species-level records are used where available, otherwise the genus.</li>
-          <li><strong>Native or introduced status</strong> from iNaturalist establishment records and the ALA Non-Native Species List. Where neither assesses a species, it is shown as "Origin not assessed".</li>
-          <li><strong>Host–fungus partner records</strong> from GloBI (Global Biotic Interactions).</li>
-          <li><strong>Edibility</strong> from the Wikipedia mycology infobox, and <strong>uses</strong> from the Wikipedia article.</li>
-        </ul>
-        <p>Nothing is inferred beyond these sources, and missing data is shown as missing.</p>
+        <p>The 🍄 button in a plant's details lists fungi recorded as its mycorrhizal partners in GloBI (Global Biotic Interactions), with partners recorded near you shown first. Origin comes from iNaturalist and the ALA Non-Native Species List, and edibility and uses come from Wikipedia. Missing data is shown as missing.</p>
         <h3>Management practice</h3>
         <p>The Management tab turns your search results into site advice. It looks for:</p>
         <ul>
@@ -284,6 +247,11 @@
       </div>
     </section>
   </main>
+
+  <dialog id="fungiDialog">
+    <form method="dialog"><button class="close" aria-label="Close">✕</button></form>
+    <div id="fungiBody"></div>
+  </dialog>
 
   <dialog id="speciesDialog">
     <form method="dialog"><button class="close" aria-label="Close">✕</button></form>

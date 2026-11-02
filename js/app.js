@@ -9,7 +9,7 @@ import * as checklist from './checklist.js';
 import { renderManagement } from './management-view.js';
 import { getUsage } from './usage.js';
 import { renderEdibles, resetEdibles, bindEdibleFilters } from './edible-view.js';
-import { renderMycorrhiza, resetMycorrhiza, bindMycoFilters } from './mycorrhiza-view.js';
+import { showFungiForPlant } from './mycorrhiza-view.js';
 
 const $ = sel => document.querySelector(sel);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -235,10 +235,8 @@ async function runSearch() {
     renderResults();
     renderManagement(state);
     resetEdibles();
-    resetMycorrhiza();
     const activeView = document.querySelector('.tab.active')?.dataset.view;
     if (activeView === 'edible') renderEdibles(state, showDetail);
-    if (activeView === 'myco') renderMycorrhiza(state, state.opts);
     setStatus(`Found ${merged.length.toLocaleString()} native species${state.removedIntroduced ? ` (${state.removedIntroduced} introduced species removed using the ALA non-native list for ${st})` : ''}. See the Management tab for site advice.`);
 
     // Fill in photos for ALA-only species of interest (rarest first), in background.
@@ -454,6 +452,7 @@ function showDetail(s) {
     <div class="row wrap">
       <button class="btn ${checklist.isSeen(s.key) ? 'primary' : ''}" data-dseen>✔ ${checklist.isSeen(s.key) ? 'Seen' : 'Mark seen'}</button>
       <button class="btn" data-dwant>${checklist.isWanted(s.key) ? '★ On wish list' : '☆ Wish list'}</button>
+      ${['flowering', 'conifers', 'ferns', 'otherplants'].includes(s.group) ? '<button class="btn" data-dfungi>🍄 Mycorrhizal fungi</button>' : ''}
     </div>
     ${entry?.seen ? `<p class="small muted">Seen ${esc(entry.seenDate)}${entry.seenPlace ? ` at ${esc(entry.seenPlace)}` : ''}</p>` : ''}
     ${entry ? `<label class="field">Notes<textarea data-note rows="2">${esc(entry.note || '')}</textarea></label>` : ''}
@@ -467,6 +466,8 @@ function showDetail(s) {
   const dlg = $('#speciesDialog');
   dlg.querySelector('[data-dseen]').onclick = () => { checklist.toggleSeen(s, state.placeLabel); showDetail(s); };
   dlg.querySelector('[data-dwant]').onclick = () => { checklist.toggleWanted(s); showDetail(s); };
+  const fungiBtn = dlg.querySelector('[data-dfungi]');
+  if (fungiBtn) fungiBtn.onclick = () => showFungiForPlant(s, state);
   const note = dlg.querySelector('[data-note]');
   if (note) note.onchange = () => checklist.setNote(s.key, note.value);
   if (!dlg.open) dlg.showModal();
@@ -597,7 +598,6 @@ document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', (
   if (tab.dataset.view === 'checklist') renderChecklist();
   if (tab.dataset.view === 'management') renderManagement(state);
   if (tab.dataset.view === 'edible') renderEdibles(state, showDetail);
-  if (tab.dataset.view === 'myco') renderMycorrhiza(state, state.opts);
   if (tab.dataset.view === 'explore') setTimeout(() => map.invalidateSize(), 50);
 }));
 
@@ -628,7 +628,6 @@ function saveSettings() {
 
 updateBadge();
 bindEdibleFilters(state, showDetail);
-bindMycoFilters(state);
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   navigator.serviceWorker.register('sw.js').catch(() => {});
