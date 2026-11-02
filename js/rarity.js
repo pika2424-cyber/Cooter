@@ -31,6 +31,8 @@ export function scoreRarity(species) {
       s.vic && { label: s.vic, src: 'Vic FFG' },
       s.epbc && { label: s.epbc, src: 'EPBC' },
       s.iucn && s.iucn.status && { label: s.iucn.status, src: 'IUCN' },
+      s.vicInfra && { label: s.vicInfra, src: 'Vic FFG' },
+      s.epbcInfra && { label: s.epbcInfra, src: 'EPBC' },
     ].filter(Boolean);
     s.listings = listings;
     s.threat = Math.max(0, ...listings.filter(l => l.src !== 'IUCN' || threatRank(l.label) >= 3).map(l => threatRank(l.label)));

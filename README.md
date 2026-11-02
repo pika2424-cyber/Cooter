@@ -14,6 +14,11 @@ A mobile-friendly web app that shows the **native species recorded around your l
   - Local rarity (Very rare / Rare / Uncommon / Common / Abundant here) based on how few records a species has compared to others in its group.
   - Sort "Rarest first" or filter to threatened / rare only.
 - **Checklist** – tick ✔ species you've seen (date + place recorded), ☆ species you want to find, add notes, see your progress per group for the current area, export to CSV, back up / restore to move between devices.
+- **Management practice** – site-specific bush management advice built from the keystone, threatened and locally rare species recorded nearby and the site's EVC habitat group:
+  - rates 19 common activities (planned burning, slashing, firewood collection, dead-tree removal, understorey clearing, herbicide, woody weed removal, grazing, pest control, bush rock, litter raking, dams/wetlands, stream works, insecticide, lighting, pets, track works, planting, nest boxes) as **Avoid / Moderate / Proceed with care / Encourage**, explaining which species each rating protects
+  - ranks **actions to increase populations & biodiversity** (hollow retention, logs, understorey, corridors, predator control, frog ponds, fire mosaics, biomass management, etc.) and lists the species that benefit
+  - habitat guidance per EVC group (indicative fire interval, grazing, revegetation), including Clause 52.17 permit notes for endangered/vulnerable EVCs
+  - printable / save as PDF
 - Works offline for your checklist (installable as a PWA – "Add to Home Screen").
 
 ## Running it
@@ -46,6 +51,8 @@ js/app.js           map, search flow, rendering
 js/sources.js       iNaturalist / ALA / EVC API clients + geometry helpers
 js/groups.js        life-group definitions & name matching
 js/rarity.js        rarity scoring
+js/management.js    management knowledge base (guilds, keystones, habitats, activities) + plan builder
+js/management-view.js  Management tab rendering
 js/checklist.js     checklist storage (localStorage), CSV/JSON export
 sw.js               offline cache
 ```
@@ -56,3 +63,4 @@ sw.js               offline cache
 - iNaturalist can't search by polygon, so in "EVC patch" mode iNat uses the patch's bounding box (ALA uses the exact shape).
 - Local rarity reflects how often a species is *recorded*, which also depends on how conspicuous it is.
 - Sensitive species locations are generalised by data providers.
+- Management advice is rule-based general guidance for south-eastern Australian bush, not a substitute for a site assessment. Fire intervals are indicative; check DEECA's tolerable fire interval table for your EVC.

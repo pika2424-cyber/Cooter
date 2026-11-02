@@ -176,3 +176,42 @@ dialog .close { float: right; border: 0; background: none; font-size: 1.2rem; cu
 .links a[hidden] { display: none; }
 label.btn.file { cursor: pointer; }
 @media (max-width: 520px) { .prog-row { grid-template-columns: 130px 1fr 50px; font-size: .82rem; } }
+
+/* Management practice */
+.tag.good { background: #2f8a4a; }
+.mgmt-site { display: flex; flex-wrap: wrap; gap: .8rem 2rem; padding: .8rem 1rem; background: var(--brand-2); border-radius: 10px; margin: .4rem 0 .8rem; }
+.mgmt-summary { font-size: 1rem; }
+.mgmt-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+@media (max-width: 760px) { .mgmt-cols { grid-template-columns: 1fr; } }
+.mgmt-list { list-style: none; padding: 0; margin: 0; }
+.mgmt-list li { padding: .45rem 0; border-bottom: 1px solid var(--line); }
+.mgmt-chips { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: .35rem; }
+.mgmt-chips li { border: 1px solid var(--line); border-radius: 999px; padding: .15rem .3rem .15rem .6rem; font-size: .85rem; }
+.mgmt-legend { display: flex; flex-wrap: wrap; gap: .3rem; margin-bottom: .5rem; }
+.mgmt-acts { display: grid; gap: .5rem; }
+.mgmt-act { border: 1px solid var(--line); border-left: 5px solid var(--lc); border-radius: 10px; padding: .5rem .8rem; }
+.mgmt-act.rating-avoid { border-left-color: var(--en); }
+.mgmt-act.rating-moderate { border-left-color: var(--vu); }
+.mgmt-act.rating-care { border-left-color: var(--nt); }
+.mgmt-act.rating-encourage { border-left-color: #2f8a4a; }
+.mgmt-act summary { display: flex; align-items: center; gap: .6rem; list-style: none; }
+.mgmt-act summary::-webkit-details-marker { display: none; }
+.act-icon { font-size: 1.3rem; }
+.act-name { flex: 1; font-weight: 600; }
+.mgmt-act ul { margin: .5rem 0 0; padding-left: 1rem; }
+.mgmt-act li { margin: .45rem 0; }
+.mgmt-boosts li { margin: .6rem 0; }
+.mgmt-hab th { width: 130px; vertical-align: top; }
+.mgmt-hab td { text-align: left !important; white-space: normal !important; }
+.mgmt-guilds { margin-top: 1rem; }
+.mgmt-disclaimer { margin-top: 1.5rem; padding: .8rem 1rem; border: 1px dashed var(--line); border-radius: 10px; font-size: .88rem; }
+
+@media print {
+  .topbar, #view-explore, #view-checklist, #view-about, #printPlan, dialog { display: none !important; }
+  #view-management { display: block !important; }
+  body { background: #fff; color: #000; }
+  .panel { border: 0; box-shadow: none; padding: 0; }
+  details { display: block; }
+  details > * { display: block; }
+  .mgmt-act { break-inside: avoid; }
+}

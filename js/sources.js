@@ -203,6 +203,7 @@ export async function inatNativeSpecies(area, opts = {}, onProgress, signal) {
   const params = {
     ...inatAreaParams(area),
     rank: 'species',
+    captive: 'false', // exclude garden plants, street trees and captive animals
     quality_grade: opts.researchOnly ? 'research' : 'research,needs_id',
     ...(opts.nativeMode === 'notIntroduced' ? { introduced: 'false' } : { native: 'true' }),
     ...(opts.sinceYear ? { d1: `${opts.sinceYear}-01-01` } : {}),
@@ -276,6 +277,7 @@ function alaUrl(area, fqs, facet, opts) {
     ['q', '*:*'], ['pageSize', '0'], ['facets', facet], ['flimit', '3000'], ['fsort', 'count'],
     ...alaAreaParams(area),
     ['fq', '-establishment_means:introduced'],
+    ['fq', '-degreeOfEstablishment:cultivated'],
     ['fq', 'taxonRank:(species OR subspecies OR variety OR form)'],
     ...(opts.sinceYear ? [['fq', `year:[${opts.sinceYear} TO *]`]] : []),
     ...fqs.map(f => ['fq', f]),
@@ -317,16 +319,22 @@ export async function alaSpecies(area, opts = {}, onProgress, signal) {
  * "country_conservation") listings for species recorded in the area.
  */
 export async function alaConservation(area, opts = {}, signal) {
-  const status = new Map(); // key -> { state, national }
+  // key -> { state, national, stateInfra, nationalInfra }. A listing of only a
+  // subspecies/variety is kept separately (e.g. "subsp. megalocarpa") so it
+  // isn't applied to the whole species.
+  const status = new Map();
   for (const [field, slot] of [['state_conservation', 'state'], ['country_conservation', 'national']]) {
     const summary = await getJSON(alaUrl(area, [], field, opts), { signal });
     const values = parseFacet(summary).map(r => r.label);
     await Promise.all(values.map(async v => {
-      const data = await getJSON(alaUrl(area, [`${field}:"${v}"`], 'species', opts), { signal });
+      const data = await getJSON(alaUrl(area, [`${field}:"${v}"`], 'taxon_name', opts), { signal });
       for (const r of parseFacet(data)) {
+        const words = r.label.replace(/\s*\([^)]*\)/g, '').trim().split(/\s+/);
+        if (words.length < 2) continue; // genus-level record
         const key = normaliseName(r.label);
         const cur = status.get(key) || {};
-        cur[slot] = v;
+        if (words.length === 2) cur[slot] = v;
+        else cur[slot + 'Infra'] = { status: v, taxon: words.slice(2).join(' ') };
         status.set(key, cur);
       }
     }));

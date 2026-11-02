@@ -5,6 +5,7 @@ import {
 } from './sources.js';
 import { scoreRarity, LOCAL_TIERS, threatClass } from './rarity.js';
 import * as checklist from './checklist.js';
+import { renderManagement } from './management-view.js';
 
 const $ = sel => document.querySelector(sel);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -221,7 +222,8 @@ async function runSearch() {
     state.species = merged;
     state.activeGroup = null;
     renderResults();
-    setStatus(`Found ${merged.length.toLocaleString()} native species.`);
+    renderManagement(state);
+    setStatus(`Found ${merged.length.toLocaleString()} native species. See the Management tab for site advice.`);
 
     // Fill in photos for ALA-only species of interest (rarest first), in background.
     const needPhotos = merged.filter(s => !s.photo).sort((a, b) => b.rarityScore - a.rarityScore).map(s => s.name);
@@ -249,7 +251,18 @@ function mergeSpecies(inat, ala, cons, introduced) {
   }
   for (const [key, s] of map) {
     const c = cons.get(key);
-    if (c) { s.vic = c.state; s.epbc = c.national; }
+    if (!c) continue;
+    s.vic = c.state; s.epbc = c.national;
+    // Subspecies-only listings: animals recorded here are usually the listed
+    // local form, so count them; for plants they are often a different
+    // (frequently planted) form, so show them as a note only.
+    const isPlant = ['flowering', 'ferns', 'conifers', 'bryophytes', 'otherplants', 'algae'].includes(s.group);
+    for (const [slot, infraKey] of [['vic', 'stateInfra'], ['epbc', 'nationalInfra']]) {
+      const inf = c[infraKey];
+      if (s[slot] || !inf) continue;
+      if (isPlant) s[slot + 'Infra'] = `${inf.status} (${inf.taxon} only)`;
+      else s[slot] = inf.status;
+    }
   }
   return [...map.values()];
 }
@@ -410,6 +423,8 @@ function showDetail(s) {
       ${s.vic ? `<li>Victoria (FFG Act): <span class="tag ${threatClass(s.vic)}">${esc(s.vic)}</span></li>` : ''}
       ${s.epbc ? `<li>National (EPBC Act): <span class="tag ${threatClass(s.epbc)}">${esc(s.epbc)}</span></li>` : ''}
       ${s.iucn ? `<li>IUCN Red List: <span class="tag ${threatClass(s.iucn.status)}">${esc(s.iucn.status)}</span></li>` : ''}
+      ${s.vicInfra ? `<li class="small">Victoria (FFG Act): ${esc(s.vicInfra)}</li>` : ''}
+      ${s.epbcInfra ? `<li class="small">National (EPBC Act): ${esc(s.epbcInfra)}</li>` : ''}
       ${!s.vic && !s.epbc && !s.iucn ? '<li>Not on a threatened species list</li>' : ''}
       <li>Locally: <span class="tag local ${s.local}">${tier.label}</span></li>
     </ul>
@@ -533,6 +548,7 @@ document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', (
   document.querySelectorAll('.tab').forEach(t => { t.classList.toggle('active', t === tab); t.setAttribute('aria-selected', t === tab); });
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === `view-${tab.dataset.view}`));
   if (tab.dataset.view === 'checklist') renderChecklist();
+  if (tab.dataset.view === 'management') renderManagement(state);
   if (tab.dataset.view === 'explore') setTimeout(() => map.invalidateSize(), 50);
 }));
 

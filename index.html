@@ -23,6 +23,7 @@
     <nav class="tabs" role="tablist">
       <button role="tab" class="tab active" data-view="explore" aria-selected="true">Explore</button>
       <button role="tab" class="tab" data-view="checklist" aria-selected="false">Checklist <span id="checklistBadge" class="badge-count" hidden></span></button>
+      <button role="tab" class="tab" data-view="management" aria-selected="false">Management</button>
       <button role="tab" class="tab" data-view="about" aria-selected="false">About</button>
     </nav>
   </header>
@@ -157,6 +158,19 @@
       </div>
     </section>
 
+    <!-- ================= MANAGEMENT PRACTICE ================= -->
+    <section id="view-management" class="view">
+      <div class="panel">
+        <div class="results-head">
+          <h2>Management practice</h2>
+          <button id="printPlan" class="btn" hidden>🖨️ Print / save PDF</button>
+        </div>
+        <div id="managementBody">
+          <p class="hint">Run a species search in <em>Explore</em> first. Cooter will then build management advice for that site from the keystone, threatened and rare species recorded there and the site's EVC.</p>
+        </div>
+      </div>
+    </section>
+
     <!-- ================= ABOUT ================= -->
     <section id="view-about" class="view">
       <div class="panel prose">
@@ -176,6 +190,15 @@
           <li><strong>Local rarity</strong> – how few records a species has in your search area compared with other species in the same group. "Very rare here" means only a single record.</li>
         </ul>
         <p>Local rarity reflects how often things are <em>recorded</em>, which also depends on how easy they are to spot and identify, so treat it as a guide.</p>
+        <h3>Management practice</h3>
+        <p>The Management tab turns your search results into site advice. It looks for:</p>
+        <ul>
+          <li><strong>Species groups with shared needs</strong>: hollow-dependent animals, ground-dwelling mammals, woodland birds, raptors, frogs, aquatic fauna, waterbirds, reptiles, orchids, grassland wildflowers, invertebrates, fungi and threatened plants. Most groups are triggered only when a threatened or locally rare member is present. Frogs, orchids, aquatic fauna and hollow users are triggered by any record.</li>
+          <li><strong>Keystone species</strong>: eucalypts, wattles, Sweet Bursaria, banksias, grass-trees, sheoaks, Kangaroo Grass, mistletoe, flying-foxes, digging marsupials, echidnas, wombats, lyrebirds, platypus, burrowing crayfish, Powerful Owls and quolls. It also flags Noisy Miners as a "problem native".</li>
+          <li><strong>The EVC habitat group</strong>, which sets indicative fire intervals and grazing and revegetation guidance.</li>
+        </ul>
+        <p>From these it rates 19 common activities (burning, slashing, firewood collection, herbicide, grazing, pest control and more) as <em>Avoid</em>, <em>Moderate</em>, <em>Proceed with care</em> or <em>Encourage</em>. It also lists actions to increase populations, each with the species that benefit. This is general guidance, not a site assessment.</p>
+        <p>Using "Records since 2000" in More options helps remove old and vagrant records from the advice.</p>
         <h3>Your checklist</h3>
         <p>Your seen and wish-list species are saved in this browser only. Use <em>Back up</em> to save a file you can restore on another device.</p>
         <h3>Sensitive species</h3>
