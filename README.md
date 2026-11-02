@@ -16,6 +16,7 @@ A mobile-friendly web app that shows the **native species recorded around your l
 - **Checklist** – tick ✔ species you've seen (date + place recorded), ☆ species you want to find, add notes, see your progress per group for the current area, export to CSV, back up / restore to move between devices.
 - **Species uses** – each species' detail view shows *Traditional (First Nations) usage* and *Other documented usage (Western & international)*, quoted from its Wikipedia article with section links. Nothing is generated: if there's no documented use, it says so.
 - **Edible plants tab** – native plants recorded nearby that Wikipedia documents as food (food categories such as Bushfood / Edible fruits / Leaf vegetables / Root vegetables, or an explicit "edible"/"eaten" sentence shown as evidence), grouped by edible part, with toxicity and threatened-species warnings.
+- **Mycorrhizal fungi tab** – local plants (mainly trees & shrubs) with their recorded fungal partners (GloBI), plus mycorrhizal fungi recorded nearby, both native and introduced, with type (FUNGuild), origin (iNaturalist / ALA non-native list), recorded hosts, edibility (Wikipedia infobox) and uses.
 - **Management practice** – site-specific bush management advice built from the keystone, threatened and locally rare species recorded nearby and the site's EVC habitat group:
   - rates 19 common activities (planned burning, slashing, firewood collection, dead-tree removal, understorey clearing, herbicide, woody weed removal, grazing, pest control, bush rock, litter raking, dams/wetlands, stream works, insecticide, lighting, pets, track works, planting, nest boxes) as **Avoid / Moderate / Proceed with care / Encourage**, explaining which species each rating protects
   - ranks **actions to increase populations & biodiversity** (hollow retention, logs, understorey, corridors, predator control, frog ponds, fire mosaics, biomass management, etc.) and lists the species that benefit
@@ -25,16 +26,26 @@ A mobile-friendly web app that shows the **native species recorded around your l
 
 ## Running it
 
-It's a static site – no build step, no server, no API keys.
+It's a static site, so there's no build step, no server and no API keys.
 
-**GitHub Pages:** in the repo go to *Settings → Pages*, choose *Deploy from a branch*, pick the branch and `/ (root)`. The app will be at `https://<user>.github.io/<repo>/`. (Geolocation needs HTTPS, which Pages provides.)
+### On your phone or computer (GitHub Pages, free)
 
-**Locally:**
+1. On GitHub open **pika2424-cyber/Cooter → Settings → Pages**.
+2. Under *Build and deployment* choose **Source: Deploy from a branch**.
+3. Pick the branch **`claude/native-species-location-app-n6suga`** (or `main` once merged) and folder **`/ (root)`**, then **Save**.
+4. After a minute or two the app is live at **https://pika2424-cyber.github.io/Cooter/**.
+5. On your phone, open that link, allow location, then use **Add to Home Screen** (Safari: Share → Add to Home Screen; Chrome: ⋮ → Install app) to use it like a normal app.
+
+GitHub Pages is free for public repositories. For a private repository it needs a paid GitHub plan, so either make the repo public or use the local option below.
+
+### Locally
 
 ```sh
 python3 -m http.server 8000
 # open http://localhost:8000
 ```
+
+(Location access needs HTTPS or localhost.)
 
 ## Data sources
 
@@ -43,6 +54,8 @@ python3 -m http.server 8000
 | [iNaturalist API](https://api.inaturalist.org/v1/docs/) | Native species observation counts, photos, common names, IUCN status, introduced-species list |
 | [ALA biocache](https://biocache-ws.ala.org.au/ws/) | Species records from VBA/museums/eBird etc., Vic FFG and EPBC conservation status |
 | [ALA Non-Native Species List (dr32213)](https://lists.ala.org.au/speciesListItem/list/dr32213) | Removes species introduced in your state (bundled as `data/introduced.json`; refresh with `python3 tools/build_introduced.py`) |
+| [FUNGuild](https://github.com/UMNFuN/FUNGuild) | Mycorrhizal type of fungal genera/species (bundled as `data/mycorrhizal-guilds.json`; refresh with `python3 tools/build_funguild.py`) |
+| [GloBI](https://www.globalbioticinteractions.org/) | Recorded ectomycorrhizal / arbuscular mycorrhizal host–fungus pairs |
 | [Wikipedia API](https://www.mediawiki.org/wiki/API:Main_page) | Traditional & other usage passages, edible-plant categories and food mentions (CC BY-SA) |
 | [DataVic NV2005_EVCBCS / NV1750_EVCBCS](https://discover.data.vic.gov.au/) (DEECA) | EVC at your location, pre-European EVC, EVCs nearby, map overlay |
 
@@ -59,6 +72,7 @@ js/management.js    management knowledge base (guilds, keystones, habitats, acti
 js/management-view.js  Management tab rendering
 js/usage.js         Wikipedia usage extraction + edible plant detection
 js/edible-view.js   Edible plants tab rendering
+js/mycorrhiza-view.js  Mycorrhizal fungi tab
 js/checklist.js     checklist storage (localStorage), CSV/JSON export
 sw.js               offline cache
 data/introduced.json  compact ALA non-native species list (per state)

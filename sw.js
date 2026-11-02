@@ -1,9 +1,9 @@
 // Service worker: caches the app shell so Cooter opens offline (your checklist
 // is always available). Species searches need a connection.
-const CACHE = 'cooter-v4';
+const CACHE = 'cooter-v5';
 const SHELL = [
   './', 'index.html', 'css/styles.css', 'icon.svg', 'manifest.webmanifest',
-  'js/app.js', 'js/groups.js', 'js/sources.js', 'js/rarity.js', 'js/checklist.js', 'js/management.js', 'js/management-view.js', 'js/usage.js', 'js/edible-view.js', 'data/introduced.json',
+  'js/app.js', 'js/groups.js', 'js/sources.js', 'js/rarity.js', 'js/checklist.js', 'js/management.js', 'js/management-view.js', 'js/usage.js', 'js/edible-view.js', 'data/introduced.json', 'data/mycorrhizal-guilds.json', 'js/mycorrhiza-view.js',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js',
 ];

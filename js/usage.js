@@ -315,3 +315,46 @@ export async function findEdibles(plants, stateCat, onProgress, signal) {
   }
   return results;
 }
+
+// ---------------------------------------------------------------------------
+// Fungal edibility (Wikipedia mycomorphbox "howEdible" + categories)
+// ---------------------------------------------------------------------------
+const EDIBILITY_LABEL = {
+  choice: 'Choice edible', edible: 'Edible', caution: 'Edible with caution', inedible: 'Inedible',
+  unknown: 'Edibility unknown', poisonous: 'Poisonous', deadly: 'Deadly poisonous',
+  psychoactive: 'Psychoactive', allergenic: 'Allergenic', medicinal: 'Medicinal',
+};
+const EDIBILITY_RANK = { deadly: 0, poisonous: 1, psychoactive: 2, allergenic: 3, caution: 4, inedible: 5, unknown: 6, medicinal: 7, edible: 8, choice: 9 };
+
+/**
+ * Edibility per fungus from Wikipedia: name -> { title, url, values:[...], labels:[...] }.
+ * Only what the article's mycological infobox states; missing => not in map.
+ */
+export async function fungalEdibility(names, onProgress, signal) {
+  const out = new Map();
+  const pending = [];
+  for (const n of names) {
+    const c = cacheGet('edib.' + n.toLowerCase());
+    if (c !== undefined) { if (c) out.set(n, c); } else pending.push(n);
+  }
+  for (let i = 0; i < pending.length; i += 20) {
+    onProgress?.(`Wikipedia: checking edibility ${Math.min(i + 20, pending.length)} of ${pending.length} fungi…`);
+    const batch = pending.slice(i, i + 20);
+    const data = await wiki({ action: 'query', prop: 'revisions', rvprop: 'content', rvslots: 'main', redirects: '1', titles: batch.join('|') }, signal);
+    const redirect = new Map();
+    for (const arr of [data.query.normalized || [], data.query.redirects || []]) for (const r of arr) redirect.set(r.from, r.to);
+    const pages = new Map((data.query.pages || []).map(p => [p.title, p]));
+    for (const n of batch) {
+      let t = n;
+      for (let k = 0; k < 3 && redirect.has(t); k++) t = redirect.get(t);
+      const pg = pages.get(t);
+      const text = pg?.revisions?.[0]?.slots?.main?.content || '';
+      const values = [...text.matchAll(/\|\s*howEdible\d?\s*=\s*([A-Za-z]+)/gi)].map(m => m[1].toLowerCase()).filter(v => EDIBILITY_LABEL[v]);
+      const uniq = [...new Set(values)].sort((a, b) => EDIBILITY_RANK[a] - EDIBILITY_RANK[b]);
+      const result = uniq.length && !pg.missing ? { title: t, url: wikiUrl(t), values: uniq, labels: uniq.map(v => EDIBILITY_LABEL[v]) } : null;
+      cacheSet('edib.' + n.toLowerCase(), result);
+      if (result) out.set(n, result);
+    }
+  }
+  return out;
+}

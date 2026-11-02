@@ -376,3 +376,106 @@ export async function alaConservation(area, opts = {}, signal) {
   }
   return status;
 }
+
+// ---------------------------------------------------------------------------
+// Fungi for the mycorrhizal tab (native AND introduced, with origin)
+// ---------------------------------------------------------------------------
+
+/**
+ * All fungi recorded in the area, with an origin from iNaturalist's
+ * establishment data: 'native', 'introduced' or null (not assessed).
+ */
+export async function inatFungiWithOrigin(area, opts = {}, signal) {
+  const base = {
+    ...inatAreaParams(area), taxon_id: '47170', rank: 'species', captive: 'false',
+    quality_grade: opts.researchOnly ? 'research' : 'research,needs_id',
+    ...(opts.sinceYear ? { d1: `${opts.sinceYear}-01-01` } : {}),
+  };
+  const all = await inatSpeciesCounts(base, { maxPages: 4, signal });
+  const native = new Set((await inatSpeciesCounts({ ...base, native: 'true' }, { maxPages: 2, signal })).map(r => r.taxon.id));
+  const introduced = new Set((await inatSpeciesCounts({ ...base, introduced: 'true' }, { maxPages: 2, signal })).map(r => r.taxon.id));
+  return all.map(r => {
+    const t = r.taxon;
+    return {
+      key: normaliseName(t.name), name: t.name, common: t.preferred_common_name || '',
+      inatId: t.id, inatCount: r.count, photo: t.default_photo?.square_url || '',
+      photoMedium: t.default_photo?.medium_url || '', photoAttribution: t.default_photo?.attribution || '',
+      origin: introduced.has(t.id) ? 'introduced' : native.has(t.id) ? 'native' : null,
+      originSource: introduced.has(t.id) || native.has(t.id) ? 'iNaturalist' : null,
+    };
+  });
+}
+
+/** All fungi species recorded in ALA for the area (no introduced filter). */
+export async function alaFungiAll(area, opts = {}, signal) {
+  const p = new URLSearchParams([
+    ['q', '*:*'], ['pageSize', '0'], ['facets', 'names_and_lsid'], ['flimit', '3000'], ['fsort', 'count'],
+    ...alaAreaParams(area), ['fq', 'kingdom:Fungi'], ['fq', 'taxonRank:(species OR subspecies OR variety OR form)'],
+    ...(opts.sinceYear ? [['fq', `year:[${opts.sinceYear} TO *]`]] : []),
+  ]);
+  const data = await getJSON(`${ALA}/occurrences/search?${p}`, { signal });
+  const merged = new Map();
+  for (const r of parseFacet(data)) {
+    const [name, lsid, common] = r.label.split('|');
+    if (!name.includes(' ')) continue;
+    const key = normaliseName(name);
+    const cur = merged.get(key);
+    if (cur) cur.alaCount += r.count;
+    else merged.set(key, { key, name: key.replace(/^./, c => c.toUpperCase()), common: common || '', alaLsid: lsid, alaCount: r.count });
+  }
+  return [...merged.values()];
+}
+
+// ---------------------------------------------------------------------------
+// GloBI – Global Biotic Interactions (mycorrhizal host records)
+// ---------------------------------------------------------------------------
+const GLOBI = 'https://api.globalbioticinteractions.org/interaction';
+const MYCO_TYPES = { hasEctomycorrhizalHost: 'EcM', hasArbuscularMycorrhizalHost: 'AM' };
+
+async function globi(side, taxa, signal) {
+  const p = new URLSearchParams([
+    ...taxa.map(t => [side, t]),
+    ['interactionType', 'hasEctomycorrhizalHost'], ['interactionType', 'hasArbuscularMycorrhizalHost'],
+    ['limit', '5000'],
+    ['fields', 'source_taxon_name,source_taxon_path,interaction_type,target_taxon_name,target_taxon_path,study_citation'],
+  ]);
+  const data = await getJSON(`${GLOBI}?${p}`, { signal });
+  return (data.data || [])
+    // GloBI has some homonym noise (e.g. a gastropod genus as "host"), so
+    // keep only fungus -> plant records.
+    .filter(([, sPath, , , tPath]) => /Fungi/.test(sPath || '') && /Plantae|Viridiplantae|Tracheophyta|Magnoliopsida|Pinopsida/.test(tPath || ''))
+    .map(([s, , type, t, , cite]) => ({ fungus: s, type: MYCO_TYPES[type], host: t, cite }));
+}
+
+/** Recorded mycorrhizal partners for plant genera: genus -> [{fungus,type,cite}] */
+export async function globiPartnersOfPlants(genera, onProgress, signal) {
+  const out = new Map();
+  for (let i = 0; i < genera.length; i += 20) {
+    onProgress?.(`GloBI: checking plant genera ${Math.min(i + 20, genera.length)} of ${genera.length}…`);
+    const recs = await globi('targetTaxon', genera.slice(i, i + 20), signal);
+    for (const r of recs) {
+      const g = r.host.split(/[\s_]/)[0];
+      if (!out.has(g)) out.set(g, []);
+      out.get(g).push(r);
+    }
+  }
+  return out;
+}
+
+/** Recorded mycorrhizal hosts for fungus species: fungus key -> [{host,type,cite}] */
+export async function globiHostsOfFungi(names, onProgress, signal) {
+  const out = new Map();
+  for (let i = 0; i < names.length; i += 20) {
+    onProgress?.(`GloBI: checking fungi ${Math.min(i + 20, names.length)} of ${names.length}…`);
+    const batch = names.slice(i, i + 20);
+    const recs = await globi('sourceTaxon', batch, signal);
+    const wanted = new Set(batch.map(normaliseName));
+    for (const r of recs) {
+      const k = normaliseName(r.fungus);
+      if (!wanted.has(k)) continue; // sourceTaxon also matches child taxa
+      if (!out.has(k)) out.set(k, []);
+      out.get(k).push(r);
+    }
+  }
+  return out;
+}

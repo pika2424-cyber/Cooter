@@ -227,3 +227,19 @@ label.btn.file { cursor: pointer; }
 .edible-list .sp-main { align-items: flex-start; }
 .tabs { overflow-x: auto; max-width: 100%; scrollbar-width: none; }
 .tab { white-space: nowrap; }
+
+/* Mycorrhizal fungi */
+.tag.myco-ecm { background: #8a5a2b; }
+.tag.myco-am { background: #4f7a8a; }
+.tag.myco-erm { background: #8a4f7a; }
+.tag.myco-orm { background: #6b4fc4; }
+.myco-plants { display: grid; gap: .5rem; }
+.myco-plant summary { flex-wrap: wrap; }
+.myco-plant p { margin: .4rem 0; }
+.myco-fungi .sp-main { align-items: flex-start; }
+.myco-fungi .sp-names > span { margin-top: .2rem; }
+.myco-uses { margin-top: .4rem; }
+.myco-uses h4 { margin: .6rem 0 .3rem; font-size: .9rem; }
+.linklike { background: none; border: 0; padding: 0; color: var(--brand); text-decoration: underline; cursor: pointer; font: inherit; }
+.myco-types ul { margin: .4rem 0; padding-left: 1.1rem; font-size: .9rem; }
+.myco-types li { margin: .3rem 0; }

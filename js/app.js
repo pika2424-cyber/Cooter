@@ -9,6 +9,7 @@ import * as checklist from './checklist.js';
 import { renderManagement } from './management-view.js';
 import { getUsage } from './usage.js';
 import { renderEdibles, resetEdibles, bindEdibleFilters } from './edible-view.js';
+import { renderMycorrhiza, resetMycorrhiza, bindMycoFilters } from './mycorrhiza-view.js';
 
 const $ = sel => document.querySelector(sel);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -202,6 +203,8 @@ async function runSearch() {
     }
   }
 
+  state.area = area;
+  state.opts = opts;
   $('#searchBtn').disabled = true;
   $('#welcome').hidden = true;
   setStatus('Searching…');
@@ -232,7 +235,10 @@ async function runSearch() {
     renderResults();
     renderManagement(state);
     resetEdibles();
-    if (document.querySelector('.tab.active')?.dataset.view === 'edible') renderEdibles(state, showDetail);
+    resetMycorrhiza();
+    const activeView = document.querySelector('.tab.active')?.dataset.view;
+    if (activeView === 'edible') renderEdibles(state, showDetail);
+    if (activeView === 'myco') renderMycorrhiza(state, state.opts);
     setStatus(`Found ${merged.length.toLocaleString()} native species${state.removedIntroduced ? ` (${state.removedIntroduced} introduced species removed using the ALA non-native list for ${st})` : ''}. See the Management tab for site advice.`);
 
     // Fill in photos for ALA-only species of interest (rarest first), in background.
@@ -591,6 +597,7 @@ document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', (
   if (tab.dataset.view === 'checklist') renderChecklist();
   if (tab.dataset.view === 'management') renderManagement(state);
   if (tab.dataset.view === 'edible') renderEdibles(state, showDetail);
+  if (tab.dataset.view === 'myco') renderMycorrhiza(state, state.opts);
   if (tab.dataset.view === 'explore') setTimeout(() => map.invalidateSize(), 50);
 }));
 
@@ -621,6 +628,7 @@ function saveSettings() {
 
 updateBadge();
 bindEdibleFilters(state, showDetail);
+bindMycoFilters(state);
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   navigator.serviceWorker.register('sw.js').catch(() => {});
