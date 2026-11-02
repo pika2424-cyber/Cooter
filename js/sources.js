@@ -172,6 +172,41 @@ export async function evcsNearby(lat, lng, radiusKm) {
 }
 
 // ---------------------------------------------------------------------------
+// State lookup & introduced-species list
+// ---------------------------------------------------------------------------
+
+/** Rough Australian state/territory code for a point (EVC presence => VIC). */
+export function stateCode(lat, lng, inVictoria) {
+  if (inVictoria) return 'VIC';
+  if (lat < -39.6) return 'TAS';
+  if (lng < 129) return 'WA';
+  if (lat > -26 && lng < 138) return 'NT';
+  if (lng < 141) return 'SA';
+  if (lat > -29) return 'QLD';
+  if (lat > -36 && lat < -35.1 && lng > 148.7 && lng < 149.4) return 'ACT';
+  // Roughly the Murray River / NSW–Vic border line from (-34,141) to (-37.5,149.9).
+  if (lng < 150 && lat < -34 - (lng - 141) * 0.39) return 'VIC';
+  return 'NSW';
+}
+
+let introducedList = null;
+/** ALA Non-Native Species List (bundled, see tools/build_introduced.py). */
+export async function loadIntroducedList() {
+  if (!introducedList) {
+    introducedList = fetch('data/introduced.json').then(r => r.json()).then(d => d.species).catch(() => ({}));
+  }
+  return introducedList;
+}
+
+/** True if the list says this species isn't native in `state`. */
+export function isIntroducedIn(list, key, state) {
+  const v = list[key];
+  if (!v) return false;
+  if (v.startsWith('*')) return true;            // exotic to Australia
+  return v.split(',').includes(state);
+}
+
+// ---------------------------------------------------------------------------
 // iNaturalist
 // ---------------------------------------------------------------------------
 

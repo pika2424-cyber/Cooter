@@ -42,6 +42,7 @@ python3 -m http.server 8000
 | --- | --- |
 | [iNaturalist API](https://api.inaturalist.org/v1/docs/) | Native species observation counts, photos, common names, IUCN status, introduced-species list |
 | [ALA biocache](https://biocache-ws.ala.org.au/ws/) | Species records from VBA/museums/eBird etc., Vic FFG and EPBC conservation status |
+| [ALA Non-Native Species List (dr32213)](https://lists.ala.org.au/speciesListItem/list/dr32213) | Removes species introduced in your state (bundled as `data/introduced.json`; refresh with `python3 tools/build_introduced.py`) |
 | [Wikipedia API](https://www.mediawiki.org/wiki/API:Main_page) | Traditional & other usage passages, edible-plant categories and food mentions (CC BY-SA) |
 | [DataVic NV2005_EVCBCS / NV1750_EVCBCS](https://discover.data.vic.gov.au/) (DEECA) | EVC at your location, pre-European EVC, EVCs nearby, map overlay |
 
@@ -60,6 +61,8 @@ js/usage.js         Wikipedia usage extraction + edible plant detection
 js/edible-view.js   Edible plants tab rendering
 js/checklist.js     checklist storage (localStorage), CSV/JSON export
 sw.js               offline cache
+data/introduced.json  compact ALA non-native species list (per state)
+tools/build_introduced.py  regenerates it
 ```
 
 ## Notes & limitations

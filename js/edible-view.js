@@ -1,6 +1,7 @@
 // "Edible plants" tab: plants found in the current search that Wikipedia
 // documents as food (by category or an explicit food sentence).
-import { findEdibles, stateForPoint } from './usage.js';
+import { findEdibles, stateCategory } from './usage.js';
+import { stateCode } from './sources.js';
 import { GROUP_BY_ID } from './groups.js';
 import { threatClass } from './rarity.js';
 
@@ -25,7 +26,7 @@ export async function renderEdibles(state, showDetail) {
     results = null;
     list.innerHTML = '';
     const plants = state.species.filter(s => PLANT_GROUPS.includes(s.group));
-    const stateCat = stateForPoint(state.point.lat, state.point.lng, !!(state.evc || state.evc1750));
+    const stateCat = stateCategory(stateCode(state.point.lat, state.point.lng, !!(state.evc || state.evc1750)));
     try {
       results = await findEdibles(plants, stateCat, m => { status.textContent = m; }, ctrl.signal);
     } catch (e) {

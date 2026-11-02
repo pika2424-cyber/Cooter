@@ -35,7 +35,15 @@ function wiki(params, signal) {
   const run = async () => {
     const url = `${API}?${new URLSearchParams({ format: 'json', formatversion: '2', origin: '*', ...params })}`;
     for (let attempt = 0; attempt < 4; attempt++) {
-      const res = await fetch(url, { headers: HEADERS, signal });
+      let res;
+      try { res = await fetch(url, { headers: HEADERS, signal }); }
+      catch (e) {
+        // Rate-limit responses sometimes lack CORS headers and surface as a
+        // network error, so back off and retry those too.
+        if (e.name === 'AbortError') throw e;
+        await sleep(2 ** attempt * 2000);
+        continue;
+      }
       if (res.status === 429 || res.status === 503) {
         const wait = Number(res.headers.get('Retry-After')) || 2 ** attempt * 2;
         await sleep(wait * 1000);
@@ -191,15 +199,8 @@ const CAUTION_CATS = /^(Poisonous plants|Toxic plants|Plant toxins)$/i;
 const FOOD_SNIPPET = /\b(edible|bush ?food|bush ?tucker|eaten (raw|cooked|fresh|roasted)|used as (a )?food|food (plant|source) (for|by|of) (the )?(Aboriginal|Indigenous)|(Aboriginal|Indigenous)[^.]{0,60}\b(ate|eaten|eat|food|roasted)|(eaten|food)[^.]{0,40}\b(Aboriginal|Indigenous))/i;
 const NOT_EDIBLE = /\b(inedible|not edible|unpalatable)\b/i;
 
-export function stateForPoint(lat, lng, inVictoria) {
-  if (inVictoria) return 'Victoria (state)';
-  if (lat < -39.6) return 'Tasmania';
-  if (lng < 129) return 'Western Australia';
-  if (lat > -26 && lng < 138) return 'the Northern Territory';
-  if (lng < 141) return 'South Australia';
-  if (lat > -29) return 'Queensland';
-  return 'New South Wales';
-}
+const STATE_CATEGORY = { VIC: 'Victoria (state)', NSW: 'New South Wales', ACT: 'the Australian Capital Territory', QLD: 'Queensland', SA: 'South Australia', TAS: 'Tasmania', WA: 'Western Australia', NT: 'the Northern Territory' };
+export const stateCategory = code => STATE_CATEGORY[code] || 'New South Wales';
 
 /** Food-related text snippets for a state's flora (cached), title -> snippet. */
 async function stateFoodSnippets(stateCat, signal, onProgress) {

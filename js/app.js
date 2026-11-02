@@ -2,6 +2,7 @@ import { GROUPS, GROUP_BY_ID, normaliseName } from './groups.js';
 import {
   EVC_WMS, EVC_LAYER_2005, EVC_LAYER_1750, evcAtPoint, evcsNearby, evcSearchArea,
   inatNativeSpecies, inatIntroducedNames, inatTaxaByName, alaSpecies, alaConservation,
+  stateCode, loadIntroducedList, isIntroducedIn,
 } from './sources.js';
 import { scoreRarity, LOCAL_TIERS, threatClass } from './rarity.js';
 import * as checklist from './checklist.js';
@@ -218,8 +219,13 @@ async function runSearch() {
     tasks.push(opts.useAla ? alaConservation(area, opts, ctrl.signal).catch(() => new Map()) : Promise.resolve(new Map()));
     tasks.push(opts.useAla ? inatIntroducedNames(area, ctrl.signal).catch(() => new Set()) : Promise.resolve(new Set()));
 
-    const [inat, ala, cons, introduced] = await Promise.all(tasks);
-    const merged = mergeSpecies(inat, ala, cons, introduced);
+    tasks.push(loadIntroducedList());
+    const [inat, ala, cons, introduced, nonNative] = await Promise.all(tasks);
+    const st = stateCode(lat, lng, !!(state.evc || state.evc1750));
+    let merged = mergeSpecies(inat, ala, cons, introduced);
+    const before = merged.length;
+    merged = merged.filter(s => !isIntroducedIn(nonNative, s.key, st));
+    state.removedIntroduced = before - merged.length;
     scoreRarity(merged);
     state.species = merged;
     state.activeGroup = null;
@@ -227,7 +233,7 @@ async function runSearch() {
     renderManagement(state);
     resetEdibles();
     if (document.querySelector('.tab.active')?.dataset.view === 'edible') renderEdibles(state, showDetail);
-    setStatus(`Found ${merged.length.toLocaleString()} native species. See the Management tab for site advice.`);
+    setStatus(`Found ${merged.length.toLocaleString()} native species${state.removedIntroduced ? ` (${state.removedIntroduced} introduced species removed using the ALA non-native list for ${st})` : ''}. See the Management tab for site advice.`);
 
     // Fill in photos for ALA-only species of interest (rarest first), in background.
     const needPhotos = merged.filter(s => !s.photo).sort((a, b) => b.rarityScore - a.rarityScore).map(s => s.name);
