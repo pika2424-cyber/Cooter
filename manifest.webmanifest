@@ -1,0 +1,13 @@
+{
+  "name": "Cooter – Native Species Near You",
+  "short_name": "Cooter",
+  "description": "Native species around you, grouped by life form and Ecological Vegetation Class, with rarity and a checklist.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f1ea",
+  "theme_color": "#2f5d3a",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Cooter – Native Species Near You</title>
+  <meta name="description" content="Find native species around you in Victoria, organised by life group and Ecological Vegetation Class, with rarity and a personal checklist.">
+  <meta name="theme-color" content="#2f5d3a">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="icon.svg" alt="" width="32" height="32">
+      <div>
+        <h1>Cooter</h1>
+        <p>Native species near you</p>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" class="tab active" data-view="explore" aria-selected="true">Explore</button>
+      <button role="tab" class="tab" data-view="checklist" aria-selected="false">Checklist <span id="checklistBadge" class="badge-count" hidden></span></button>
+      <button role="tab" class="tab" data-view="about" aria-selected="false">About</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ================= EXPLORE ================= -->
+    <section id="view-explore" class="view active">
+      <div class="layout">
+        <aside class="panel controls">
+          <div class="row">
+            <button id="locateBtn" class="btn primary">📍 Use my location</button>
+          </div>
+          <p class="hint">…or tap/click anywhere on the map to choose a spot.</p>
+
+          <div id="map" aria-label="Map"></div>
+          <label class="check"><input type="checkbox" id="evcOverlay" checked> Show EVC map layer</label>
+
+          <div class="field">
+            <label for="radius">Search radius</label>
+            <select id="radius">
+              <option value="1">1 km</option>
+              <option value="2">2 km</option>
+              <option value="5" selected>5 km</option>
+              <option value="10">10 km</option>
+              <option value="25">25 km</option>
+            </select>
+          </div>
+
+          <fieldset class="field">
+            <legend>Search area</legend>
+            <label class="radio"><input type="radio" name="scope" value="radius" checked> Whole radius</label>
+            <label class="radio"><input type="radio" name="scope" value="evc"> Only my EVC patch <small>(species recorded in the same vegetation type as where you're standing)</small></label>
+          </fieldset>
+
+          <fieldset class="field">
+            <legend>Sources</legend>
+            <label class="check"><input type="checkbox" id="srcInat" checked> iNaturalist</label>
+            <label class="check"><input type="checkbox" id="srcAla" checked> Atlas of Living Australia <small>(VBA, museums, eBird…)</small></label>
+          </fieldset>
+
+          <details class="field">
+            <summary>More options</summary>
+            <div class="field">
+              <label for="nativeMode">Native filter (iNaturalist)</label>
+              <select id="nativeMode">
+                <option value="strict" selected>Confirmed native only</option>
+                <option value="notIntroduced">Anything not introduced</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="since">Records since</label>
+              <select id="since">
+                <option value="">All time</option>
+                <option value="2000">2000</option>
+                <option value="2010">2010</option>
+                <option value="2020">2020</option>
+              </select>
+            </div>
+            <label class="check"><input type="checkbox" id="researchOnly"> iNaturalist research grade only</label>
+          </details>
+
+          <button id="searchBtn" class="btn primary wide" disabled>Find native species</button>
+          <p id="status" class="status" role="status" aria-live="polite"></p>
+        </aside>
+
+        <div class="results">
+          <section id="evcCard" class="panel evc" hidden></section>
+
+          <section id="resultsPanel" class="panel" hidden>
+            <div class="results-head">
+              <h2 id="resultsTitle">Species</h2>
+              <div id="groupChips" class="chips"></div>
+            </div>
+            <div class="filters">
+              <input id="filterText" type="search" placeholder="Search names…" aria-label="Search names">
+              <select id="filterRarity" aria-label="Rarity filter">
+                <option value="all">All species</option>
+                <option value="listed">Threatened (listed)</option>
+                <option value="rare">Rare here or listed</option>
+              </select>
+              <select id="filterSeen" aria-label="Checklist filter">
+                <option value="all">Seen &amp; unseen</option>
+                <option value="unseen">Not yet seen</option>
+                <option value="seen">Seen</option>
+                <option value="wanted">On my wish list</option>
+              </select>
+              <select id="sortBy" aria-label="Sort">
+                <option value="rarity">Rarest first</option>
+                <option value="records">Most recorded first</option>
+                <option value="name">Common name A–Z</option>
+                <option value="sci">Scientific name A–Z</option>
+              </select>
+            </div>
+            <div id="groups"></div>
+          </section>
+
+          <section id="welcome" class="panel welcome">
+            <h2>Welcome 👋</h2>
+            <p>Cooter lists the <strong>native plants, animals and fungi</strong> recorded around you, grouped by type of life. It pulls records from <strong>iNaturalist</strong> and the <strong>Atlas of Living Australia</strong>, and looks up the <strong>Ecological Vegetation Class (EVC)</strong> you're standing in from Victoria's DEECA vegetation mapping.</p>
+            <ol>
+              <li>Press <em>Use my location</em> (or click the map).</li>
+              <li>Pick a radius and press <em>Find native species</em>.</li>
+              <li>Tick ✔ species you've seen and ☆ the ones you want to find.</li>
+            </ol>
+            <p class="hint">EVC data covers Victoria only. Species data works anywhere in Australia.</p>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= CHECKLIST ================= -->
+    <section id="view-checklist" class="view">
+      <div class="panel">
+        <div class="results-head">
+          <h2>My checklist</h2>
+          <div class="row wrap">
+            <button id="exportCsv" class="btn">Export CSV</button>
+            <button id="exportJson" class="btn">Back up</button>
+            <label class="btn file">Restore<input id="importJson" type="file" accept="application/json" hidden></label>
+            <button id="clearChecklist" class="btn danger">Clear</button>
+          </div>
+        </div>
+        <div id="progress"></div>
+        <div class="filters">
+          <select id="checklistFilter" aria-label="Show">
+            <option value="seen">Seen</option>
+            <option value="wanted">Wish list</option>
+            <option value="all">Everything</option>
+          </select>
+        </div>
+        <div id="checklistList"></div>
+      </div>
+    </section>
+
+    <!-- ================= ABOUT ================= -->
+    <section id="view-about" class="view">
+      <div class="panel prose">
+        <h2>How it works</h2>
+        <h3>Data sources</h3>
+        <ul>
+          <li><strong>iNaturalist</strong> – community observations. Uses iNaturalist's <em>native</em> establishment flags, so only species recognised as native to the area are shown.</li>
+          <li><strong>Atlas of Living Australia (ALA)</strong> – aggregates the Victorian Biodiversity Atlas, museum collections, eBird, BirdLife and more. Records flagged as introduced are removed, as are species iNaturalist lists as introduced in the area.</li>
+          <li><strong>EVC mapping</strong> – DEECA's <em>NV2005_EVCBCS</em> (current native vegetation) and <em>NV1750_EVCBCS</em> (pre-European vegetation) layers from DataVic, including each EVC's Bioregional Conservation Status.</li>
+        </ul>
+        <h3>EVC patch search</h3>
+        <p>"Only my EVC patch" takes the mapped vegetation polygon you're standing in, clips it to your radius, and searches ALA inside that exact shape. iNaturalist doesn't support polygon searches, so its results use the patch's bounding box.</p>
+        <p>If you're standing somewhere with no remnant vegetation (e.g. a suburb or farm paddock), Cooter shows the <em>pre-1750</em> EVC – what grew there originally – which is a great guide for indigenous gardening and revegetation.</p>
+        <h3>Rarity</h3>
+        <ul>
+          <li><strong>Listed status</strong> – Victorian <em>Flora and Fauna Guarantee Act</em> threatened list and the national <em>EPBC Act</em> list (via ALA), plus IUCN Red List (via iNaturalist).</li>
+          <li><strong>Local rarity</strong> – how few records a species has in your search area compared with other species in the same group. "Very rare here" means only a single record.</li>
+        </ul>
+        <p>Local rarity reflects how often things are <em>recorded</em>, which also depends on how easy they are to spot and identify, so treat it as a guide.</p>
+        <h3>Your checklist</h3>
+        <p>Your seen and wish-list species are saved in this browser only. Use <em>Back up</em> to save a file you can restore on another device.</p>
+        <h3>Sensitive species</h3>
+        <p>Locations of some threatened species are deliberately blurred by data providers to protect them, so they may appear in a wider area than where they really occur.</p>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="speciesDialog">
+    <form method="dialog"><button class="close" aria-label="Close">✕</button></form>
+    <div id="speciesDetail"></div>
+  </dialog>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
