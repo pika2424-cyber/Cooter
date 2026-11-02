@@ -6,6 +6,8 @@ import {
 import { scoreRarity, LOCAL_TIERS, threatClass } from './rarity.js';
 import * as checklist from './checklist.js';
 import { renderManagement } from './management-view.js';
+import { getUsage } from './usage.js';
+import { renderEdibles, resetEdibles, bindEdibleFilters } from './edible-view.js';
 
 const $ = sel => document.querySelector(sel);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -223,6 +225,8 @@ async function runSearch() {
     state.activeGroup = null;
     renderResults();
     renderManagement(state);
+    resetEdibles();
+    if (document.querySelector('.tab.active')?.dataset.view === 'edible') renderEdibles(state, showDetail);
     setStatus(`Found ${merged.length.toLocaleString()} native species. See the Management tab for site advice.`);
 
     // Fill in photos for ALA-only species of interest (rarest first), in background.
@@ -434,6 +438,7 @@ function showDetail(s) {
       ${s.alaCount ? `<li>Atlas of Living Australia: ${s.alaCount.toLocaleString()} records</li>` : ''}
       ${s.inatGlobalCount ? `<li class="muted">iNaturalist worldwide: ${s.inatGlobalCount.toLocaleString()}</li>` : ''}
     </ul>
+    <div id="usageBox" class="usage"><h3>Uses</h3><p class="hint">Looking up documented uses on Wikipedia…</p></div>
     <div class="row wrap">
       <button class="btn ${checklist.isSeen(s.key) ? 'primary' : ''}" data-dseen>✔ ${checklist.isSeen(s.key) ? 'Seen' : 'Mark seen'}</button>
       <button class="btn" data-dwant>${checklist.isWanted(s.key) ? '★ On wish list' : '☆ Wish list'}</button>
@@ -453,6 +458,36 @@ function showDetail(s) {
   const note = dlg.querySelector('[data-note]');
   if (note) note.onchange = () => checklist.setNote(s.key, note.value);
   if (!dlg.open) dlg.showModal();
+  loadUsage(s);
+}
+
+function usageList(items, title, url) {
+  return `<ul class="usage-list">${items.slice(0, 5).map(i => `
+    <li><blockquote>${esc(i.text)}</blockquote>
+      <a class="small" href="${esc(url)}#${encodeURIComponent(i.anchor.replace(/ /g, '_'))}" target="_blank" rel="noopener">Wikipedia – ${esc(title)} › ${esc(i.section)}</a></li>`).join('')}
+  </ul>${items.length > 5 ? `<p class="hint small">+${items.length - 5} more passages in the <a href="${esc(url)}" target="_blank" rel="noopener">full article</a>.</p>` : ''}`;
+}
+
+async function loadUsage(s) {
+  const box = document.getElementById('usageBox');
+  try {
+    const u = await getUsage(s.name);
+    if (document.getElementById('usageBox') !== box || !box.isConnected) return; // dialog changed
+    if (u.missing) {
+      box.innerHTML = `<h3>Uses</h3><p class="hint">There's no Wikipedia article for <em>${esc(s.name)}</em>, so no documented uses can be shown.</p>`;
+      return;
+    }
+    box.innerHTML = `
+      <h3>Traditional (First Nations) usage</h3>
+      ${u.traditional.length ? usageList(u.traditional, u.title, u.url)
+        : '<p class="hint">No traditional usage is documented in this species\' Wikipedia article. Knowledge may still exist and be held by Traditional Owners.</p>'}
+      <h3>Other documented usage (Western &amp; international)</h3>
+      ${u.western.length ? usageList(u.western, u.title, u.url)
+        : '<p class="hint">No other usage is documented in this species\' Wikipedia article.</p>'}
+      <p class="muted small">Quoted from <a href="${esc(u.url)}" target="_blank" rel="noopener">Wikipedia</a> (CC BY-SA). Passages are picked automatically. Check the source before relying on them, and never eat or use a plant medicinally without expert identification.</p>`;
+  } catch (e) {
+    if (box.isConnected) box.innerHTML = `<h3>Uses</h3><p class="hint error">Couldn't load usage information (${esc(e.message)}).</p>`;
+  }
 }
 
 $('#speciesDialog').addEventListener('click', e => { if (e.target.id === 'speciesDialog') e.target.close(); });
@@ -549,6 +584,7 @@ document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', (
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === `view-${tab.dataset.view}`));
   if (tab.dataset.view === 'checklist') renderChecklist();
   if (tab.dataset.view === 'management') renderManagement(state);
+  if (tab.dataset.view === 'edible') renderEdibles(state, showDetail);
   if (tab.dataset.view === 'explore') setTimeout(() => map.invalidateSize(), 50);
 }));
 
@@ -578,6 +614,7 @@ function saveSettings() {
 })();
 
 updateBadge();
+bindEdibleFilters(state, showDetail);
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   navigator.serviceWorker.register('sw.js').catch(() => {});

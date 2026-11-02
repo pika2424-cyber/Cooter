@@ -23,6 +23,7 @@
     <nav class="tabs" role="tablist">
       <button role="tab" class="tab active" data-view="explore" aria-selected="true">Explore</button>
       <button role="tab" class="tab" data-view="checklist" aria-selected="false">Checklist <span id="checklistBadge" class="badge-count" hidden></span></button>
+      <button role="tab" class="tab" data-view="edible" aria-selected="false">Edible plants</button>
       <button role="tab" class="tab" data-view="management" aria-selected="false">Management</button>
       <button role="tab" class="tab" data-view="about" aria-selected="false">About</button>
     </nav>
@@ -158,6 +159,33 @@
       </div>
     </section>
 
+    <!-- ================= EDIBLE PLANTS ================= -->
+    <section id="view-edible" class="view">
+      <div class="panel">
+        <div class="results-head">
+          <h2 id="edibleTitle">Edible plants in this area</h2>
+          <div class="row wrap">
+            <select id="edibleFilter" aria-label="Filter">
+              <option value="all">All evidence</option>
+              <option value="strong">Wikipedia food category only</option>
+            </select>
+            <label class="check"><input type="checkbox" id="edibleHideThreatened" checked> Hide threatened species</label>
+          </div>
+        </div>
+        <div class="warning-box">
+          <strong>⚠️ Before you eat anything wild</strong>
+          <ul>
+            <li>Only eat a plant if you are <strong>100% sure of its identity</strong>. Several edible species have toxic look-alikes, and some need preparation (e.g. leaching or cooking) or are only edible in part.</li>
+            <li>Collecting plants in national parks, state parks and most reserves is illegal. Protected flora need permits under the FFG Act. Ask permission on private land.</li>
+            <li>Bush foods are part of First Nations cultural knowledge. Harvest lightly, never take the whole plant, and consider learning from or buying through Aboriginal-led bush food businesses.</li>
+            <li>A plant shows here only if Wikipedia records food use for it (a food category, or a sentence describing it as food). <strong>An absence doesn't mean a plant is inedible, and inclusion doesn't mean the local form is safe.</strong></li>
+          </ul>
+        </div>
+        <p id="edibleStatus" class="status" role="status" aria-live="polite"></p>
+        <div id="edibleList"><p class="hint">Run a species search in <em>Explore</em> first.</p></div>
+      </div>
+    </section>
+
     <!-- ================= MANAGEMENT PRACTICE ================= -->
     <section id="view-management" class="view">
       <div class="panel">
@@ -179,6 +207,7 @@
         <ul>
           <li><strong>iNaturalist</strong> – community observations. Uses iNaturalist's <em>native</em> establishment flags, so only species recognised as native to the area are shown.</li>
           <li><strong>Atlas of Living Australia (ALA)</strong> – aggregates the Victorian Biodiversity Atlas, museum collections, eBird, BirdLife and more. Records flagged as introduced are removed, as are species iNaturalist lists as introduced in the area.</li>
+          <li><strong>Wikipedia</strong> – species usage passages and edible plant categories (CC BY-SA).</li>
           <li><strong>EVC mapping</strong> – DEECA's <em>NV2005_EVCBCS</em> (current native vegetation) and <em>NV1750_EVCBCS</em> (pre-European vegetation) layers from DataVic, including each EVC's Bioregional Conservation Status.</li>
         </ul>
         <h3>EVC patch search</h3>
@@ -190,6 +219,15 @@
           <li><strong>Local rarity</strong> – how few records a species has in your search area compared with other species in the same group. "Very rare here" means only a single record.</li>
         </ul>
         <p>Local rarity reflects how often things are <em>recorded</em>, which also depends on how easy they are to spot and identify, so treat it as a guide.</p>
+        <h3>Species uses</h3>
+        <p>Each species' details include <strong>Traditional (First Nations) usage</strong> and <strong>Other documented usage (Western &amp; international)</strong>. Both are quoted directly from the species' English Wikipedia article, with a link to the section each passage came from.</p>
+        <ul>
+          <li>A passage counts as traditional usage only if a sentence mentions Aboriginal / Indigenous / First Nations people <em>and</em> a use (food, fibre, medicine, tools…).</li>
+          <li>Other usage comes only from use-type sections (Uses, Cultivation, Timber, Culinary…) and must state a use.</li>
+          <li>Nothing is generated or filled in. If the article has no usage information, Cooter says so. Much traditional knowledge isn't written on Wikipedia and belongs to Traditional Owners.</li>
+        </ul>
+        <h3>Edible plants</h3>
+        <p>The Edible plants tab lists native plants in your search area that Wikipedia documents as food. This means either a food category (Bushfood, Edible fruits, Edible nuts and seeds, Leaf vegetables, Root vegetables…) or a sentence describing the plant as edible or eaten, which is shown as evidence. Plants without this evidence aren't listed. Always confirm identification before eating anything, and never harvest threatened species or from parks and reserves.</p>
         <h3>Management practice</h3>
         <p>The Management tab turns your search results into site advice. It looks for:</p>
         <ul>
